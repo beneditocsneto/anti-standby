@@ -1,15 +1,20 @@
 package org.mb;
 
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.Robot;
+import java.awt.*;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
+
+    private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
+    private static final Clock CLOCK = Clock.systemDefaultZone();
+
+    static void main(String[] args) throws InterruptedException {
         Main main = new Main();
         while (Main.shouldPreventStandby(args)) {
             main.preventStandby();
@@ -20,17 +25,17 @@ public class Main {
     private static boolean shouldPreventStandby(String[] userParameter) {
         String regex = "^([01]\\d|2[0-3]):[0-5]\\d$";
         if (userParameter == null || userParameter.length == 0) {
-            System.out.println("No user parameter provided, prevent standby will run while the system is awake");
+            LOGGER.info("No user parameter provided, prevent standby will run while the system is awake");
             return true;
         }
         if (!userParameter[0].matches(regex)) {
-            System.out.println("Invalid user parameter format, prevent standby will run while the system is awake");
+            LOGGER.info("Invalid user parameter format, prevent standby will run while the system is awake");
             return true;
         }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         LocalTime time = LocalTime.parse(userParameter[0], formatter);
-        LocalDateTime dateTime = LocalDateTime.of(LocalDate.now(), time);
-        return dateTime.isAfter(LocalDateTime.now());
+        LocalDateTime dateTime = LocalDateTime.of(LocalDate.now(CLOCK), time);
+        return dateTime.isAfter(LocalDateTime.now(CLOCK));
     }
 
     private void preventStandby() {
@@ -42,7 +47,7 @@ public class Main {
             robot.mouseMove(point1.x, point1.y);
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            LOGGER.log(Level.WARNING, "Failed to move mouse to prevent standby", e);
         }
     }
 }
